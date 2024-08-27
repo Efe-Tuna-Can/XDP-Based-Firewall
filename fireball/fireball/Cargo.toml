@@ -1,0 +1,38 @@
+[package]
+name = "fireball"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+aya = "0.12"
+aya-log = "0.2"
+clap = { version = "4.1", features = ["derive"] }
+fireball-common = { path = "../fireball-common", features = ["user"] }
+anyhow = "1"
+env_logger = "0.10"
+libc = "0.2"
+log = "0.4"
+tokio = { version = "1.25", features = ["macros", "rt", "rt-multi-thread", "net", "signal"] }
+figment = { version = "0.10.18", features = ["yaml", "env"] }
+axum = "0.5.13"
+serde = { version = "1.0.144", features = ["derive"] }
+serde_json = "1.0.85"
+serde_with = "2.0.1"
+hyper = { version = "0.14", features = ["full"] }
+async-trait = "0.1.50"
+tower-http = { version = "0.5", features = ["cors", "sensitive-headers", "trace", "validate-request","fs", "map-request-body"] }
+tower = "0.4"
+http = "1.1.0"
+rusqlite = { version = "0.26", features = ["bundled"] }
+
+
+[patch.crates-io]
+http = { version = "1.1.0", package = "http" }
+
+
+
+
+[[bin]]
+name = "fireball"
+path = "src/main.rs"

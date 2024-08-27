@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EBPF Frontend Console</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { font-size: 24px; }
+        h2 { font-size: 20px; margin-top: 20px; }
+        .form-control { width: 300px; display: inline-block; margin-right: 10px; }
+        .btn { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">EBPF Frontend Console</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Block IP</h2>
+                <input type="text" id="block-ip-input" class="form-control" placeholder="123.123.123.123">
+                <button id="block-ip-button" class="btn btn-primary">Block IP</button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Blocked IPs</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Blocked IPs</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blocked-ips"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Block Protocol</h2>
+                <select id="block-proto-input" class="form-select"></select>
+                <button id="block-proto-button" class="btn btn-primary">Block Protocol</button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Blocked Protocols</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Blocked Protocols</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blocked-protos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadProtocolOptions() {
+            try {
+                const response = await fetch('/protocols');
+                if (response.ok) {
+                    const protocols = await response.json();
+                    const select = document.getElementById('block-proto-input');
+                    select.innerHTML = '';
+                    Object.keys(protocols).forEach(proto => {
+                        const option = document.createElement('option');
+                        option.value = proto;
+                        option.textContent = proto.toUpperCase();
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error('Failed to load protocol options');
+                }
+            } catch (error) {
+                console.error('Error loading protocol options:', error);
+            }
+        }
+
+        async function blockIp() {
+            const ip = document.getElementById('block-ip-input').value;
+            console.log(`Blocking IP: ${ip}`);
+            try {
+                const response = await fetch('/block_ip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer APITOKEN' },
+                    body: JSON.stringify({ ip })
+                });
+                const result = await response.json();
+                console.log(`Block IP Response: `, result);
+                if (response.ok) {
+                    alert('IP blocked successfully');
+                    loadBlockedIps();
+                } else {
+                    alert(`Failed to block IP: ${result.status}`);
+                }
+            } catch (error) {
+                console.error('Error blocking IP:', error);
+            }
+        }
+
+        async function unblockIp(ip) {
+            console.log(`Unblocking IP: ${ip}`);
+            try {
+                const response = await fetch('/unblock_ip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer APITOKEN' },
+                    body: JSON.stringify({ ip })
+                });
+                const result = await response.json();
+                console.log(`Unblock IP Response: `, result);
+                if (response.ok) {
+                    alert('IP unblocked successfully');
+                    loadBlockedIps();
+                } else {
+                    alert(`Failed to unblock IP: ${result.status}`);
+                }
+            } catch (error) {
+                console.error('Error unblocking IP:', error);
+            }
+        }
+
+        async function blockProto() {
+            const protocol = document.getElementById('block-proto-input').value;
+            console.log(`Blocking protocol: ${protocol}`);
+            try {
+                const response = await fetch('/block_proto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer APITOKEN' },
+                    body: JSON.stringify({ protocol })
+                });
+                const result = await response.json();
+                console.log(`Block Protocol Response: `, result);
+                if (response.ok) {
+                    alert('Protocol blocked successfully');
+                    loadBlockedProtos();
+                } else {
+                    alert(`Failed to block protocol: ${result.status}`);
+                }
+            } catch (error) {
+                console.error('Error blocking protocol:', error);
+            }
+        }
+
+        async function unblockProto(protocol) {
+            console.log(`Unblocking protocol: ${protocol}`);
+            try {
+                const response = await fetch('/unblock_proto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer APITOKEN' },
+                    body: JSON.stringify({ protocol })
+                });
+                const result = await response.json();
+                console.log(`Unblock Protocol Response: `, result);
+                if (response.ok) {
+                    alert('Protocol unblocked successfully');
+                    loadBlockedProtos();
+                } else {
+                    alert(`Failed to unblock protocol: ${result.status}`);
+                }
+            } catch (error) {
+                console.error('Error unblocking protocol:', error);
+            }
+        }
+
+        async function loadBlockedIps() {
+            console.log('Loading blocked IPs...');
+            try {
+                const response = await fetch('/blocked_ips');
+                if (response.ok) {
+                    const ips = await response.json();
+                    console.log(`Blocked IPs: ${ips}`);
+                    const list = document.getElementById('blocked-ips');
+                    list.innerHTML = '';
+                    ips.forEach(ip => {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+                        cell.textContent = ip;
+                        row.appendChild(cell);
+
+                        const actionCell = document.createElement('td');
+                        const unblockButton = document.createElement('button');
+                        unblockButton.className = 'btn btn-secondary';
+                        unblockButton.textContent = 'Unblock';
+                        unblockButton.onclick = () => unblockIp(ip);
+                        actionCell.appendChild(unblockButton);
+                        row.appendChild(actionCell);
+
+                        list.appendChild(row);
+                    });
+                } else {
+                    console.error('Failed to load blocked IPs');
+                }
+            } catch (error) {
+                console.error('Error loading blocked IPs:', error);
+            }
+        }
+
+        async function loadBlockedProtos() {
+            console.log('Loading blocked protocols...');
+            try {
+                const response = await fetch('/blocked_protocols');
+                if (response.ok) {
+                    const protocols = await response.json();
+                    console.log(`Blocked Protocols: ${protocols}`);
+                    const list = document.getElementById('blocked-protos');
+                    list.innerHTML = '';
+                    protocols.forEach(proto => {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+                        cell.textContent = proto;
+                        row.appendChild(cell);
+
+                        const actionCell = document.createElement('td');
+                        const unblockButton = document.createElement('button');
+                        unblockButton.className = 'btn btn-secondary';
+                        unblockButton.textContent = 'Unblock';
+                        unblockButton.onclick = () => unblockProto(proto);
+                        actionCell.appendChild(unblockButton);
+                        row.appendChild(actionCell);
+
+                        list.appendChild(row);
+                    });
+                } else {
+                    console.error('Failed to load blocked protocols');
+                }
+            } catch (error) {
+                console.error('Error loading blocked protocols:', error);
+            }
+        }
+
+        // Add event listeners to buttons
+        document.getElementById('block-ip-button').addEventListener('click', blockIp);
+        document.getElementById('block-proto-button').addEventListener('click', blockProto);
+
+        // Load blocked IPs and protocols on page load
+        loadBlockedIps();
+        loadBlockedProtos();
+        loadProtocolOptions();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
