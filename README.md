@@ -2,5 +2,5 @@
 
 How to run?
 
-execute the following command:
+Run the following bash script:
 ./execute.sh 
